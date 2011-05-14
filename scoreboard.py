@@ -14,6 +14,9 @@ def main(argv):
 		team = argv[0]
 	except:
 		pass
+	if len(argv) > 1:
+		if "last" in argv: last = True
+	else: last = False
 	if not team: team = "sharks"
 	page = urllib2.urlopen('http://%s.nhl.com/index.html' % (team))
 	if not page: 
@@ -21,20 +24,32 @@ def main(argv):
 		sys.exit(1)
 	html = ''.join(page.readlines())
 	# pos finds our start flag. Lets hope the NHL will stick to this layout
-	pos = html.find('<div id="nextGameBody">')
+	if last:
+		pos = html.find('<div id="lastGameBody">')
+	        rpos = html.find('</div><!-- end lastGameBody')
+	        substring = html[pos:rpos] #extract info between flags
+        	soup = BeautifulSoup(substring)
+	        try:
+        	        gamebox = soup.findAll(id='lastGameBody')[0]
+        	except:
+                	#no future game...
+                	print "No last game"
+	else:
+		pos = html.find('<div id="nextGameBody">')
 
-	# rpos finds the end flag. The scoreboard is between the flags
-	rpos = html.find('</div><!-- end nextGameBody')
-	substring = html[pos:rpos] #extract info between flags
-	soup = BeautifulSoup(substring)
-	try:
-		gamebox = soup.findAll(id='nextGameBody')[0]
-	except:
-		#no future game...
-		print "No Games Scheduled!"
-		sys.exit(0)
-	status = gamebox.findAll(attrs={'class': 'status'})[0].string
-	if 'Progress' in status:
+		# rpos finds the end flag. The scoreboard is between the flags
+		rpos = html.find('</div><!-- end nextGameBody')
+		substring = html[pos:rpos] #extract info between flags
+		soup = BeautifulSoup(substring)
+		try:
+			gamebox = soup.findAll(id='nextGameBody')[0]
+		except:
+			#no future game...
+			print "No Games Scheduled!"
+			sys.exit(0)
+	
+	status = remove_space(gamebox.findAll(attrs={'class': 'status'})[0].string)
+	if 'PROGRESS' in status or "FINAL" in status:
 		#game is in progress, get score etc
 		scorebox = getObjectByClassName(gamebox, 'score')
 		teambox1 = scorebox[0]
