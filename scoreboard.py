@@ -49,7 +49,7 @@ def main(argv):
 			sys.exit(0)
 	
 	status = remove_space(gamebox.findAll(attrs={'class': 'status'})[0].string)
-	if 'PROGRESS' in status or "FINAL" in status:
+	if 'Progress' in status or "FINAL" in status:
 		#game is in progress, get score etc
 		scorebox = getObjectByClassName(gamebox, 'score')
 		teambox1 = scorebox[0]
